@@ -1,0 +1,20 @@
+# Node
+node_modules/
+
+# Build
+dist/
+build/
+
+# Java
+target/
+
+# IDE
+.idea/
+.vscode/
+
+# DB logs (H2 o similares)
+*.log
+*.db
+*.lck
+*.script
+*.properties
