@@ -1,5 +1,6 @@
 import './App.css'
-import Formulario from "./pages/formulario"
+import Formulario from "./pages/TestRazonamientoFormaA"
+import Formulario2 from "./pages/TestRazonamientoFormaB (1)"
 
 function App() {
   return (
@@ -7,4 +8,10 @@ function App() {
   ) 
 }
 
+
+function name() {
+    return (
+      <Formulario2/>
+    )
+}
 export default App
