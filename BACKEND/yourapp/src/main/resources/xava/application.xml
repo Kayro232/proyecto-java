@@ -4,25 +4,24 @@
 
 <application name="yourapp"> 
 	
-	<!-- 
-	A default module for each entity is assumed with the
-	controllers on <default-module/>
-	-->
 	<default-module>		  
 		<controller name="Typical"/>		
 	</default-module>
 	
-	<!-- 
-	You can define additional modules, for example:	  
-	<module name="OnlyReadTeacher">
-		<model name="Teacher"/>
-		<controller name="Print"/>
-	</module>		
-	-->
-	
 	<module name="Dashboard">
 		<model name="Dashboard"/>
 		<controller name="InitModelWithNewInstance"/>
+	</module>
+
+	<!-- ✅ AGREGA ESTO -->
+	<module name="ResultadoTest">
+		<model name="ResultadoTest"/>
+		<controller name="Typical"/>
+	</module>
+
+	<module name="RespuestaDetalle">
+		<model name="RespuestaDetalle"/>
+		<controller name="Typical"/>
 	</module>
 	
 </application>

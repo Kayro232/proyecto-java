@@ -73,7 +73,7 @@ export default function TestRazonamientoFormaB() {
     setAnswers((prev) => ({ ...prev, [qId]: letter }))
   }
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const unanswered = questions.filter((q) => !answers[q.id])
     if (unanswered.length > 0) {
       const idx = questions.findIndex((q) => q.id === unanswered[0].id)
@@ -81,6 +81,28 @@ export default function TestRazonamientoFormaB() {
       alert(`Aún tienes ${unanswered.length} pregunta(s) sin responder. Te llevamos a la primera.`)
       return
     }
+
+    const score = questions.filter((q) => answers[q.id] === correctAnswers[q.id]).length
+    const total = questions.length
+    const porcentaje = Math.round((score / total) * 100)
+
+    const detalles = questions.map((q) => ({
+      preguntaId: q.id,
+      respuestaDada: answers[q.id],
+      respuestaCorrecta: correctAnswers[q.id],
+      esCorrecta: answers[q.id] === correctAnswers[q.id],
+    }))
+
+    try {
+      await fetch("/api/guardar-resultado", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ testNombre: "Razonamiento Forma B", puntaje: score, total, porcentaje, detalles }),
+      })
+    } catch (e) {
+      console.error("Error al guardar resultado:", e)
+    }
+
     setSubmitted(true)
   }
 
@@ -93,11 +115,7 @@ export default function TestRazonamientoFormaB() {
   const answered = Object.keys(answers).length
   const total = questions.length
   const progress = Math.round((answered / total) * 100)
-
-  const score = submitted
-    ? questions.filter((q) => answers[q.id] === correctAnswers[q.id]).length
-    : 0
-
+  const score = submitted ? questions.filter((q) => answers[q.id] === correctAnswers[q.id]).length : 0
   const pct = submitted ? Math.round((score / total) * 100) : 0
 
   return (
@@ -117,7 +135,7 @@ export default function TestRazonamientoFormaB() {
         </div>
       )}
 
-      {/* Resultado global tras enviar */}
+      {/* Resultado global */}
       {submitted && (
         <div style={{
           background: pct >= 70 ? "#f0fff4" : pct >= 50 ? "#fffbeb" : "#fff5f5",
@@ -127,22 +145,17 @@ export default function TestRazonamientoFormaB() {
           <div style={{ fontSize: 40, fontWeight: 900, color: pct >= 70 ? "#38a169" : pct >= 50 ? "#d97706" : "#e53e3e" }}>
             {score} / {total}
           </div>
-          <div style={{ fontSize: 15, color: "#444", marginTop: 4 }}>
-            {pct}% de respuestas correctas
-          </div>
+          <div style={{ fontSize: 15, color: "#444", marginTop: 4 }}>{pct}% de respuestas correctas</div>
           <div style={{ fontSize: 13, color: "#666", marginTop: 6 }}>
             {pct >= 70 ? "¡Buen resultado!" : pct >= 50 ? "Resultado aceptable, sigue practicando." : "Necesitas más práctica."}
           </div>
-          <button
-            onClick={handleReset}
-            style={{ marginTop: 16, padding: "9px 24px", borderRadius: 7, border: "2px solid #2d4a8a", background: "#fff", color: "#2d4a8a", fontSize: 14, fontWeight: 700, cursor: "pointer" }}
-          >
+          <button onClick={handleReset} style={{ marginTop: 16, padding: "9px 24px", borderRadius: 7, border: "2px solid #2d4a8a", background: "#fff", color: "#2d4a8a", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>
             Reiniciar prueba
           </button>
         </div>
       )}
 
-      {/* Barra de progreso (solo antes de enviar) */}
+      {/* Barra de progreso */}
       {!submitted && (
         <div style={{ marginBottom: 28 }}>
           <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "#666", marginBottom: 6 }}>
@@ -161,17 +174,13 @@ export default function TestRazonamientoFormaB() {
           const isCorrect = submitted && answers[q.id] === correctAnswers[q.id]
           const isWrong   = submitted && answers[q.id] !== correctAnswers[q.id]
           return (
-            <button
-              key={q.id}
-              onClick={() => setCurrent(i)}
-              style={{
-                width: 34, height: 34, borderRadius: 6, border: "1.5px solid",
-                borderColor: current === i ? "#2d4a8a" : isCorrect ? "#38a169" : isWrong ? "#e53e3e" : answers[q.id] ? "#2d4a8a" : "#ccc",
-                background: current === i ? "#2d4a8a" : isCorrect ? "#f0fff4" : isWrong ? "#fff5f5" : answers[q.id] ? "#e0e7ff" : "#fff",
-                color: current === i ? "#fff" : isCorrect ? "#38a169" : isWrong ? "#e53e3e" : answers[q.id] ? "#2d4a8a" : "#888",
-                fontSize: 11, fontWeight: 700, cursor: "pointer", transition: "all 0.15s",
-              }}
-            >
+            <button key={q.id} onClick={() => setCurrent(i)} style={{
+              width: 34, height: 34, borderRadius: 6, border: "1.5px solid",
+              borderColor: current === i ? "#2d4a8a" : isCorrect ? "#38a169" : isWrong ? "#e53e3e" : answers[q.id] ? "#2d4a8a" : "#ccc",
+              background: current === i ? "#2d4a8a" : isCorrect ? "#f0fff4" : isWrong ? "#fff5f5" : answers[q.id] ? "#e0e7ff" : "#fff",
+              color: current === i ? "#fff" : isCorrect ? "#38a169" : isWrong ? "#e53e3e" : answers[q.id] ? "#2d4a8a" : "#888",
+              fontSize: 11, fontWeight: 700, cursor: "pointer", transition: "all 0.15s",
+            }}>
               {q.id}
             </button>
           )
@@ -207,45 +216,23 @@ export default function TestRazonamientoFormaB() {
                 const isCorrect = correctAnswers[q.id] === letter
                 const isWrong   = submitted && selected && !isCorrect
 
-                let bg = "#fafbff"
-                let borderColor = "#e0e4ef"
-                let circleColor = "#e8eaf0"
-                let circleText  = "#555"
-                let textColor   = "#1a1a2e"
-
+                let bg = "#fafbff", borderColor = "#e0e4ef", circleColor = "#e8eaf0", circleText = "#555", textColor = "#1a1a2e"
                 if (submitted) {
-                  if (isCorrect) {
-                    bg = "#f0fff4"; borderColor = "#38a169"
-                    circleColor = "#38a169"; circleText = "#fff"; textColor = "#276749"
-                  } else if (isWrong) {
-                    bg = "#fff5f5"; borderColor = "#e53e3e"
-                    circleColor = "#e53e3e"; circleText = "#fff"; textColor = "#9b2c2c"
-                  }
+                  if (isCorrect) { bg="#f0fff4"; borderColor="#38a169"; circleColor="#38a169"; circleText="#fff"; textColor="#276749" }
+                  else if (isWrong) { bg="#fff5f5"; borderColor="#e53e3e"; circleColor="#e53e3e"; circleText="#fff"; textColor="#9b2c2c" }
                 } else if (selected) {
-                  bg = "#e8eeff"; borderColor = "#2d4a8a"
-                  circleColor = "#2d4a8a"; circleText = "#fff"
+                  bg="#e8eeff"; borderColor="#2d4a8a"; circleColor="#2d4a8a"; circleText="#fff"
                 }
 
                 return (
-                  <button
-                    key={letter}
-                    onClick={() => handleSelect(q.id, letter)}
-                    disabled={submitted}
-                    style={{
-                      display: "flex", alignItems: "center", gap: 12,
-                      padding: "11px 16px", borderRadius: 8,
-                      border: `${submitted && isCorrect ? "2px" : selected ? "2px" : "1.5px"} solid ${borderColor}`,
-                      background: bg, cursor: submitted ? "default" : "pointer",
-                      textAlign: "left", transition: "all 0.15s",
-                      fontSize: 14, color: textColor,
-                    }}
-                  >
-                    <span style={{
-                      width: 26, height: 26, borderRadius: "50%",
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      fontWeight: 700, fontSize: 13, flexShrink: 0,
-                      background: circleColor, color: circleText,
-                    }}>
+                  <button key={letter} onClick={() => handleSelect(q.id, letter)} disabled={submitted} style={{
+                    display: "flex", alignItems: "center", gap: 12,
+                    padding: "11px 16px", borderRadius: 8,
+                    border: `${submitted && isCorrect ? "2px" : selected ? "2px" : "1.5px"} solid ${borderColor}`,
+                    background: bg, cursor: submitted ? "default" : "pointer",
+                    textAlign: "left", transition: "all 0.15s", fontSize: 14, color: textColor,
+                  }}>
+                    <span style={{ width: 26, height: 26, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 13, flexShrink: 0, background: circleColor, color: circleText }}>
                       {letter}
                     </span>
                     <span style={{ flex: 1 }}>{opt}</span>
@@ -256,7 +243,6 @@ export default function TestRazonamientoFormaB() {
               })}
             </div>
 
-            {/* Respuesta correcta si falló */}
             {submitted && answers[q.id] !== correctAnswers[q.id] && (
               <div style={{ marginTop: 14, padding: "10px 14px", background: "#f0fff4", border: "1px solid #38a169", borderRadius: 8, fontSize: 13, color: "#276749" }}>
                 <strong>Respuesta correcta:</strong> {correctAnswers[q.id]} — {q.options[q.letters.indexOf(correctAnswers[q.id])]}
@@ -266,36 +252,27 @@ export default function TestRazonamientoFormaB() {
         )
       })()}
 
-      {/* Navegación entre preguntas */}
+      {/* Navegación */}
       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 32 }}>
-        <button
-          onClick={() => setCurrent((c) => Math.max(0, c - 1))}
-          disabled={current === 0}
-          style={{ padding: "9px 20px", borderRadius: 7, border: "1.5px solid #ccd", background: "#fff", cursor: current === 0 ? "not-allowed" : "pointer", color: "#555", fontSize: 13 }}
-        >
+        <button onClick={() => setCurrent((c) => Math.max(0, c - 1))} disabled={current === 0}
+          style={{ padding: "9px 20px", borderRadius: 7, border: "1.5px solid #ccd", background: "#fff", cursor: current === 0 ? "not-allowed" : "pointer", color: "#555", fontSize: 13 }}>
           ← Anterior
         </button>
-        <button
-          onClick={() => setCurrent((c) => Math.min(total - 1, c + 1))}
-          disabled={current === total - 1}
-          style={{ padding: "9px 20px", borderRadius: 7, border: "1.5px solid #ccd", background: "#fff", cursor: current === total - 1 ? "not-allowed" : "pointer", color: "#555", fontSize: 13 }}
-        >
+        <button onClick={() => setCurrent((c) => Math.min(total - 1, c + 1))} disabled={current === total - 1}
+          style={{ padding: "9px 20px", borderRadius: 7, border: "1.5px solid #ccd", background: "#fff", cursor: current === total - 1 ? "not-allowed" : "pointer", color: "#555", fontSize: 13 }}>
           Siguiente →
         </button>
       </div>
 
       {/* Botón enviar */}
       {!submitted && (
-        <button
-          onClick={handleSubmit}
-          style={{
-            width: "100%", padding: "14px", borderRadius: 9, border: "none",
-            background: answered === total ? "#2d4a8a" : "#a0aec0",
-            color: "#fff", fontSize: 16, fontWeight: 700,
-            cursor: answered === total ? "pointer" : "not-allowed",
-            letterSpacing: 0.5, transition: "background 0.2s",
-          }}
-        >
+        <button onClick={handleSubmit} style={{
+          width: "100%", padding: "14px", borderRadius: 9, border: "none",
+          background: answered === total ? "#2d4a8a" : "#a0aec0",
+          color: "#fff", fontSize: 16, fontWeight: 700,
+          cursor: answered === total ? "pointer" : "not-allowed",
+          letterSpacing: 0.5, transition: "background 0.2s",
+        }}>
           {answered === total ? "Enviar y ver resultados" : `Faltan ${total - answered} respuestas`}
         </button>
       )}

@@ -33,26 +33,10 @@ const questions: Question[] = [
 ]
 
 const correctAnswers: Record<number, string> = {
-  3:  "B", // 9
-  4:  "A", // 33
-  5:  "B", // 15
-  6:  "D", // 23
-  7:  "C", // 12
-  8:  "C", // 18
-  9:  "C", // 15
-  10: "A", // 6
-  11: "B", // 49
-  12: "B", // 4
-  13: "C", // 19
-  14: "C", // 15
-  15: "D", // 18
-  16: "B", // 9
-  17: "A", // 3
-  18: "C", // 3
-  19: "B", // 63
-  20: "B", // 72
-  21: "A", // 245
-  22: "B", // 14
+  3:  "B", 4:  "A", 5:  "B", 6:  "D", 7:  "C",
+  8:  "C", 9:  "C", 10: "A", 11: "B", 12: "B",
+  13: "C", 14: "C", 15: "D", 16: "B", 17: "A",
+  18: "C", 19: "B", 20: "B", 21: "A", 22: "B",
 }
 
 export default function TestRazonamientoFormaA() {
@@ -65,7 +49,7 @@ export default function TestRazonamientoFormaA() {
     setAnswers((prev) => ({ ...prev, [qId]: letter }))
   }
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const unanswered = questions.filter((q) => !answers[q.id])
     if (unanswered.length > 0) {
       const idx = questions.findIndex((q) => q.id === unanswered[0].id)
@@ -73,6 +57,28 @@ export default function TestRazonamientoFormaA() {
       alert(`Aún tienes ${unanswered.length} pregunta(s) sin responder. Te llevamos a la primera.`)
       return
     }
+
+    const score = questions.filter((q) => answers[q.id] === correctAnswers[q.id]).length
+    const total = questions.length
+    const porcentaje = Math.round((score / total) * 100)
+
+    const detalles = questions.map((q) => ({
+      preguntaId: q.id,
+      respuestaDada: answers[q.id],
+      respuestaCorrecta: correctAnswers[q.id],
+      esCorrecta: answers[q.id] === correctAnswers[q.id],
+    }))
+
+    try {
+      await fetch("/api/guardar-resultado", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ testNombre: "Razonamiento Forma A", puntaje: score, total, porcentaje, detalles }),
+      })
+    } catch (e) {
+      console.error("Error al guardar resultado:", e)
+    }
+
     setSubmitted(true)
   }
 

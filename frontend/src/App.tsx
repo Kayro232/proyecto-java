@@ -1,6 +1,6 @@
 import './App.css'
-import Formulario from "./pages/TestRazonamientoFormaA"
-import Formulario2 from "./pages/TestRazonamientoFormaB (1)"
+import Formulario from "./pages/TestRazonamientoFormaA (2)"
+import Formulario2 from "./pages/TestRazonamientoFormaB (2)"
 
 function App() {
   return (
